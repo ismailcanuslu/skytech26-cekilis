@@ -1,0 +1,29 @@
+services:
+  cekilis:
+    image: ghcr.io/etubmt/cekilis:latest
+    container_name: cekilis
+    restart: unless-stopped
+    networks:
+      - default
+      - proxy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy-network"
+
+      # HTTP -> HTTPS Redirect
+      - "traefik.http.routers.cekilis-http.rule=Host(`cekilis.etubmt.com`)"
+      - "traefik.http.routers.cekilis-http.entrypoints=web"
+      - "traefik.http.routers.cekilis-http.middlewares=cekilis-redirect"
+      - "traefik.http.middlewares.cekilis-redirect.redirectscheme.scheme=https"
+
+      # HTTPS
+      - "traefik.http.routers.cekilis-https.rule=Host(`cekilis.etubmt.com`)"
+      - "traefik.http.routers.cekilis-https.entrypoints=websecure"
+      - "traefik.http.routers.cekilis-https.tls.certresolver=myresolver"
+
+      # App internal port
+      - "traefik.http.services.cekilis-svc.loadbalancer.server.port=3000"
+
+networks:
+  proxy-network:
+    external: true
